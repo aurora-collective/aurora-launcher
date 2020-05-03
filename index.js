@@ -446,7 +446,7 @@ function startBootstrapApp () {
     mainWindow.webContents.once('dom-ready', () => {
         log.info('Bootstrap window is ready.');
         mainWindow.show()
-        autoUpdater.checkForUpdatesAndNotify()
+        autoUpdater.checkForUpdates()
     })
 
 }
@@ -487,7 +487,7 @@ autoUpdater.on('checking-for-update', () => {
 autoUpdater.on('update-available', info => {
     log.log("Update available.")
     mainWindow.webContents.executeJavaScript(`Swal.fire({
-        title: 'Updates',
+        title: 'Available Update',
         html: 'There are available updates.',
         icon: 'success'
     });`)
