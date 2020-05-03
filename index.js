@@ -483,9 +483,13 @@ autoUpdater.on('checking-for-update', () => {
     });`)
 })
 
-autoUpdater.on('checking-available', info => {
+autoUpdater.on('update-available', info => {
     log.log("Update available.")
-
+    mainWindow.webContents.executeJavaScript(`Swal.fire({
+        title: 'Updates',
+        html: 'There are available updates.',
+        icon: 'success'
+    });`)
 })
 
 autoUpdater.on('download-progress', progressObj => {
@@ -504,7 +508,7 @@ autoUpdater.on('error', err => {
     log.log(`Update check failed: ${err.toString()}`)
 })
 
-autoUpdater.on('checking-not-available', info => {
+autoUpdater.on('update-not-available', info => {
     log.log("Update not available.")
     mainWindow.webContents.executeJavaScript(`Swal.fire({
         title: 'Updates',
@@ -513,7 +517,7 @@ autoUpdater.on('checking-not-available', info => {
     });`)
 })
 
-autoUpdater.on('update-downlaoded', info => {
+autoUpdater.on('update-downloaded', info => {
     mainWindow.webContents.executeJavaScript(`Swal.fire({
         title: 'App Restarting',
         html: 'Hang on tight, restarting the app for update!',
