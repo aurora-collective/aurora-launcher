@@ -107,7 +107,8 @@ function preRequirementsCheck() {
                                 confirmButtonColor: '#3085d6',
                                 showCancelButton: true,
                                 cancelButtonText: "Install",
-                                confirmButtonText: 'Launch Team Speak'
+                                confirmButtonText: 'Launch Team Speak',
+                                allowOutsideClick: false,
                                 }).then((result) => {
                                     if (result.value) {
                                         ipc.send('connectTS3Server');
