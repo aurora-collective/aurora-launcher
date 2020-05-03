@@ -512,7 +512,7 @@ autoUpdater.on('update-not-available', info => {
     log.log("Update not available.")
     mainWindow.webContents.executeJavaScript(`Swal.fire({
         title: 'Updates',
-        html: 'There are not updates available.',
+        html: 'There are no available updates.',
         icon: 'error'
     });`)
 })
