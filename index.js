@@ -7,6 +7,7 @@ All Reserve Rights Curt Creation 2020 - 2021
 
 const {app, BrowserWindow, dialog, shell, clipboard} = require("electron")
 const {download} = require("electron-dl")
+const {autoUpdater} = require('electron-updater')
 const log = require('electron-log')
 const isUserDeveloper = require('electron-is-dev')
 const path = require('path')
@@ -444,9 +445,15 @@ function startBootstrapApp () {
     mainWindow.webContents.once('dom-ready', () => {
         log.info('Bootstrap window is ready.');
         mainWindow.show()
+        autoUpdater.checkForUpdatesAndNotify()
     })
 
 }
+
+ipc.on('checkUpdate', function() {
+    log.log("Triggering auto update tool")
+    autoUpdater.checkForUpdatesAndNotify()
+})
 
 app.on('open-url', function (event, data) {
 	event.preventDefault()
@@ -463,3 +470,57 @@ app.on('window-all-closed', () => {
 log.info('Code Encoded.')
 app.on('ready', startBootstrapApp)
 app.setAsDefaultProtocolClient('aurora')
+
+autoUpdater.on('checking-for-update', () => {
+    log.log("Checking for updates.")
+    mainWindow.webContents.executeJavaScript(`Swal.fire({
+        title: 'Checking Updates',
+        html: 'Hang on tight, checking updates!',
+        allowOutsideClick: false,
+        onBeforeOpen: () => {
+            Swal.showLoading();
+        }
+    });`)
+})
+
+autoUpdater.on('checking-available', info => {
+    log.log("Update available.")
+
+})
+
+autoUpdater.on('download-progress', progressObj => {
+    log.log(`Downloading update. DL: ${progressObj.bytesPerSecond} - Downloaded ${progressObj.percent}%`)
+    mainWindow.webContents.executeJavaScript(`Swal.fire({
+        title: 'Downloading Update',
+        html: '${progressObj.bytesPerSecond} - ${progressObj.percent}%',
+        allowOutsideClick: false,
+        onBeforeOpen: () => {
+            Swal.showLoading();
+        }
+    });`)
+})
+
+autoUpdater.on('error', err => {
+    log.log(`Update check failed: ${err.toString()}`)
+})
+
+autoUpdater.on('checking-not-available', info => {
+    log.log("Update not available.")
+    mainWindow.webContents.executeJavaScript(`Swal.fire({
+        title: 'Updates',
+        html: 'There are not updates available.',
+        icon: 'error'
+    });`)
+})
+
+autoUpdater.on('update-downlaoded', info => {
+    mainWindow.webContents.executeJavaScript(`Swal.fire({
+        title: 'App Restarting',
+        html: 'Hang on tight, restarting the app for update!',
+        allowOutsideClick: false,
+        onBeforeOpen: () => {
+            Swal.showLoading();
+        }
+    });`)
+    autoUpdater.quitAndInstall();
+})
