@@ -496,7 +496,7 @@ autoUpdater.on('download-progress', progressObj => {
     log.log(`Downloading update. DL: ${progressObj.bytesPerSecond} - Downloaded ${progressObj.percent}%`)
     mainWindow.webContents.executeJavaScript(`Swal.fire({
         title: 'Downloading Update',
-        html: '${progressObj.bytesPerSecond} - ${progressObj.percent}%',
+        html: 'Speed: ${progressObj.bytesPerSecond} - ${~~progressObj.percent}% [${progressObj.transferred}/${progressObj.total}',
         allowOutsideClick: false,
         onBeforeOpen: () => {
             Swal.showLoading();
