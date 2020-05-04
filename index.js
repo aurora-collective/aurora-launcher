@@ -150,10 +150,10 @@ function checkTS3DoneInstalling (theOrigPath){
 function installTS3(thePath) {
     setTimeout(function() {
         if (fs.existsSync(thePath)) {
-            exec(thePath)
+            exec(thePath + " /S")
             mainWindow.webContents.executeJavaScript(`Swal.fire({
                 title: 'Running TS3 Installion',
-                html: 'Please install team speak 3 as promted.',
+                html: 'Installing team speak 3 to your system.',
                 allowOutsideClick: false,
                 onBeforeOpen: () => {
                     Swal.showLoading();
@@ -474,23 +474,10 @@ app.setAsDefaultProtocolClient('aurora')
 
 autoUpdater.on('checking-for-update', () => {
     log.log("Checking for updates.")
-    mainWindow.webContents.executeJavaScript(`Swal.fire({
-        title: 'Checking Updates',
-        html: 'Hang on tight, checking updates!',
-        allowOutsideClick: false,
-        onBeforeOpen: () => {
-            Swal.showLoading();
-        }
-    });`)
 })
 
 autoUpdater.on('update-available', info => {
     log.log("Update available.")
-    mainWindow.webContents.executeJavaScript(`Swal.fire({
-        title: 'Available Update',
-        html: 'There are available updates.',
-        icon: 'success'
-    });`)
 })
 
 autoUpdater.on('download-progress', progressObj => {
