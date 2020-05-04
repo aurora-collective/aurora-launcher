@@ -338,11 +338,6 @@ function clientConnect() {
                 }
             } else {
                 log.error("Port " + rPort + " is using " + list[0].name)
-                mainWindow.webContents.executeJavaScript(`Swal.fire({
-                    title: 'Proxy Failed',
-                    html: 'Unable to create socket on port ${rPort}. Please close ${list[0].name}.',
-                    icon: 'error'
-                });`)
             }
         })
     }
@@ -381,6 +376,8 @@ function isFiveMStillRunning () {
         isRunning('FiveM_GTAProcess.exe', (status) => {
             if (status != true) {
                 log.log("Shutting all the local proxies servers")
+                mainWindow.webContents.executeJavaScript('reEnableEverything();')
+                mainWindow.show()
                 if (localTCPServer) {
                     localTCPServer.end()
                     localTCPServer = null
@@ -397,6 +394,8 @@ function isFiveMStillRunning () {
                  }, 5000)
             }
         })
+    } else {
+        log.error("called isfivemstillrunning but rConnected is null")
     }
 }
 
@@ -434,6 +433,7 @@ function clientStartRProxy() {
                     icon: 'success'
                 });`)
                 mainWindow.hide()
+                mainWindow.webContents.executeJavaScript('destroyEverything();')
                 notifier.notify("AuroraRP Launcher is hidden at the apptray.")
             }
         })
@@ -502,7 +502,6 @@ function startBootstrapApp () {
         { label: 'Quit AuroraRP', click() { app.quit() } },
       ])
     appTray.setContextMenu(contextMenu)
-
     mainWindow.webContents.once('dom-ready', () => {
         log.info('Bootstrap window is ready.')
         mainWindow.show()

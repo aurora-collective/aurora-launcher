@@ -101,6 +101,9 @@
         var ipc = require('electron').ipcRenderer;
         var player;
         var play = true;
+        var funcsAll = true;
+        updatePlayersx = null
+        updatePlayerListDisplayx = null
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtubea', {
             videoId: 'cE4MhYBBIfc', // YouTube Video ID
@@ -130,6 +133,21 @@
             });
         }
 
+        function destroyEverything() {
+            if (player) {
+                player.destroy();
+                player = null;
+            }
+            funcsAll = false;
+        }
+
+        function reEnableEverything() {
+            funcsAll = true;
+            updatePlayersx();
+            updatePlayerListDisplayx();
+            onYouTubeIframeAPIReady();
+        }
+
         window.addEventListener('keydown', function(e) {
             if(e.keyCode == 32 && e.target == document.body) {
                 if (play) {
@@ -156,29 +174,34 @@
             }
 
             function updatePlayers() {
-                $.post("https://play.aurorav.net/api/online.php", function(data) {
-                    data = JSON.parse(data);
-                    thePlayerOnline = data.online;
-                    thePlayersInGame = data.players;
-                    $("#onlinePlayers").html(thePlayerOnline);
-                });
-                setTimeout(updatePlayers, 5000)
+                if (funcsAll == true) {
+                    $.post("https://play.aurorav.net/api/online.php", function(data) {
+                        data = JSON.parse(data);
+                        thePlayerOnline = data.online;
+                        thePlayersInGame = data.players;
+                        $("#onlinePlayers").html(thePlayerOnline);
+                    });
+                    setTimeout(updatePlayers, 5000)
+                }
             }
 
             function updatePlayerListDisplay() {
-                var theHCount = 1;
-                var theFinalWord = "";
-                shuffle(thePlayersInGame);
-                $.each(thePlayersInGame, function(index, value) {
-                    if (theHCount <= 7) {
-                        theFinalWord = value.name + ", " + theFinalWord
-                        theHCount++;
-                    }
-                })
-                $("#displayPlayers").html(theFinalWord+" and others");
-                setTimeout(updatePlayerListDisplay, 2000);
+                if (funcsAll == true) {
+                    var theHCount = 1;
+                    var theFinalWord = "";
+                    shuffle(thePlayersInGame);
+                    $.each(thePlayersInGame, function(index, value) {
+                        if (theHCount <= 7) {
+                            theFinalWord = value.name + ", " + theFinalWord
+                            theHCount++;
+                        }
+                    })
+                    $("#displayPlayers").html(theFinalWord+" and others");
+                    setTimeout(updatePlayerListDisplay, 2000);
+                }
             }
-
+            updatePlayersx = updatePlayers
+            updatePlayerListDisplayx = updatePlayerListDisplay
 
             $("#playNow").click(function(){
                 Swal.fire({
