@@ -356,7 +356,7 @@ function clientStartCheckingOnline() {
             rConnected = null
             clientConnect()
         })
-        theRest.setTimeout(3000, function( ) {
+        theRest.setTimeout(7000, function( ) {
             log.error("Timedout. Trying to reconnect method.")
             rConnected = null
             clientConnect()
