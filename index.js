@@ -85,7 +85,8 @@ function preRequirementsCheck() {
                 icon: 'error'
             });`)
         } else {
-            isRunning('ts3client_win64.exe', (status) => {
+            initiateConnection()
+            /*isRunning('ts3client_win64.exe', (status) => {
                 if (status == true) {
                     if (ts3Connected == true) {
                         initiateConnection()
@@ -128,7 +129,7 @@ function preRequirementsCheck() {
                         }
                     })
                 }
-            })
+            })*/
         }
     })
 }
