@@ -348,7 +348,7 @@ function clientStartCheckingOnline() {
                     rConnected = null
                     clientConnect()
                 } else {
-                    setTimeout(clientStartCheckingOnline, 1500)
+                    setTimeout(clientStartCheckingOnline, 4000)
                 }
             })
         }).on("error", (err) => {
