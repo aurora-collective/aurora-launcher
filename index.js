@@ -506,9 +506,9 @@ function startBootstrapApp () {
         log.info('Bootstrap window is ready.')
         mainWindow.show()
         autoUpdater.checkForUpdates()
-        appTray.on('click', () => {
-            mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
-        })
+        //appTray.on('click', () => {
+            //mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
+        //})
     })
 }
 
