@@ -54,13 +54,9 @@ if (!gotTheLock) {
 } else {
     app.on('second-instance', () => {
 		if (mainWindow) {
-			if (mainWindow.isVisible()) {
-				if (mainWindow.isMinimized()) {
-                    mainWindow.restore()
-                    mainWindow.show()
-                } 
-				mainWindow.focus()
-			}
+            mainWindow.restore()
+            mainWindow.show()
+            mainWindow.focus()
 		}
 	})
 }
@@ -353,6 +349,7 @@ function clientStartCheckingOnline() {
             });
             resp.on('end', () => {
                 var fxVersion = JSON.parse(data).version
+                log.log(fxVersion.search("FXServer"))
                 if (fxVersion.search("FXServer") == -1) {
                     rConnected = null
                     clientConnect()
@@ -372,31 +369,27 @@ function clientStartCheckingOnline() {
 }
 
 function isFiveMStillRunning () {
-    if (rConnected != null) {
-        isRunning('FiveM_GTAProcess.exe', (status) => {
-            if (status != true) {
-                log.log("Shutting all the local proxies servers")
-                mainWindow.webContents.executeJavaScript('reEnableEverything();')
-                mainWindow.show()
-                if (localTCPServer) {
-                    localTCPServer.end()
-                    localTCPServer = null
-                }
-                if (localUDPServer) {
-                    localUDPServer.close()
-                    localUDPServer = null
-                }
-                rConnected = null
-                mainWindow.webContents.executeJavaScript(`player.playVideo();`)
-            } else {
-                setTimeout(function() { 
-                    isFiveMStillRunning()
-                 }, 5000)
+    isRunning('FiveM_GTAProcess.exe', (status) => {
+        if (status != true) {
+            log.log("Shutting all the local proxies servers")
+            mainWindow.webContents.executeJavaScript('reEnableEverything();')
+            mainWindow.show()
+            if (localTCPServer) {
+                localTCPServer.end()
+                localTCPServer = null
             }
-        })
-    } else {
-        log.error("called isfivemstillrunning but rConnected is null")
-    }
+            if (localUDPServer) {
+                localUDPServer.close()
+                localUDPServer = null
+            }
+            rConnected = null
+            mainWindow.webContents.executeJavaScript(`player.playVideo();`)
+        } else {
+            setTimeout(function() { 
+                isFiveMStillRunning()
+                }, 5000)
+        }
+    })
 }
 
 function clientStartRProxy() {
