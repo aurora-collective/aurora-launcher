@@ -492,7 +492,7 @@ function startBootstrapApp () {
 
     mainWindow.loadFile('assets/gui/launcher.html', {userAgent: 'Aurora Launcher'})
 
-    appTray = new Tray('build/icon.ico')
+    /*appTray = new Tray('icon.ico')
     appTray.setToolTip("AuroraRP")
     const contextMenu = Menu.buildFromTemplate([
         { label: 'AuroraRP v'+ app.getVersion() },
@@ -501,7 +501,7 @@ function startBootstrapApp () {
         { type: 'separator' },
         { label: 'Quit AuroraRP', click() { app.quit() } },
       ])
-    appTray.setContextMenu(contextMenu)
+    appTray.setContextMenu(contextMenu)*/
     mainWindow.webContents.once('dom-ready', () => {
         log.info('Bootstrap window is ready.')
         mainWindow.show()
