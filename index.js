@@ -303,39 +303,32 @@ function initiateConnection() {
 
 function clientConnect() {
     if (rConnected == null) {
-        findProcess('port', rPort)
-        .then(function(list) {
-            if (!list.length) {
-                log.log("Checking available servers..")
-                shuffle(rServers)
-                for(let val of rServers) {
-                    if (rConnected == null) {
-                        httpRequest.get('http://'+val+":"+rPort, (resp) => {
-                            let data = ''
+        log.log("Checking available servers..")
+        shuffle(rServers)
+        for(let val of rServers) {
+            if (rConnected == null) {
+                httpRequest.get('http://'+val+":"+rPort, (resp) => {
+                    let data = ''
 
-                            resp.on('data', (chunk) => {
-                                data += chunk
-                            });
-                            resp.on('end', () => {
-                                var fxVersion = JSON.parse(data).version
-                                if (fxVersion.search("FXServer") != -1) {
-                                    if (rConnected == null) {
-                                        rConnected = val
-                                        log.log("Found available host " + val + ":" + rPort)
-                                        clientStartCheckingOnline()
-                                        clientStartRProxy()
-                                    }
-                                }
-                            })
-                        }).on("error", (err) => {
-                            log.log("Host failed: "+err)
-                        })
-                    }
-                }
-            } else {
-                log.error("Port " + rPort + " is using " + list[0].name)
+                    resp.on('data', (chunk) => {
+                        data += chunk
+                    });
+                    resp.on('end', () => {
+                        var fxVersion = JSON.parse(data).version
+                        if (fxVersion.search("FXServer") != -1) {
+                            if (rConnected == null) {
+                                rConnected = val
+                                log.log("Found available host " + val + ":" + rPort)
+                                clientStartCheckingOnline()
+                                clientStartRProxy()
+                            }
+                        }
+                    })
+                }).on("error", (err) => {
+                    log.log("Host failed: "+err)
+                })
             }
-        })
+        }
     }
 }
 
@@ -401,48 +394,62 @@ function clientStartRProxy() {
         localUDPServer.close()
         localUDPServer = null
     }
-    log.log("Created local proxy server for " + rConnected + ":" + rPort)
-    localTCPServer = tcpProxy.createProxy(rPort, rConnected, rPort)
-    localUDPServer = udpProxy.createServer({
-        address: rConnected,
-        port: rPort,
-        localport: rPort,
-        timeOutTime: 10000
-    })
-    localUDPServer.on('listening', function (details) {
-        log.log('DNS - IPv4 to IPv4 proxy }>=<{')
-        log.log('udp-proxy-server ready on ' + details.server.family + '  ' + details.server.address + ':' + details.server.port)
-        log.log('traffic is forwarded to ' + details.target.family + '  ' + details.target.address + ':' + details.target.port)
-        mainWindow.webContents.executeJavaScript(`player.pauseVideo();`)
-        isRunning('FiveM_GTAProcess.exe', (status) => {
-            if (status != true) {
-                setTimeout(function() { 
-                    isFiveMStillRunning()
-                }, 30000)
-                shell.openExternal("fivem://connect/localhost:"+rPort)
-                mainWindow.webContents.executeJavaScript(`Swal.fire({
-                    title: 'Connected',
-                    html: 'You are now connected to AuroraRP!',
-                    icon: 'success'
-                });`)
-                mainWindow.hide()
-                mainWindow.webContents.executeJavaScript('destroyEverything();')
-                notifier.notify("AuroraRP Launcher is hidden at the apptray.")
-            }
-        })
-    })
+    findProcess('port', rPort)
+    .then(function(list) {
+        if (!list.length) {
+            log.log("Created local proxy server for " + rConnected + ":" + rPort)
+            localTCPServer = tcpProxy.createProxy(rPort, rConnected, rPort)
+            localUDPServer = udpProxy.createServer({
+                address: rConnected,
+                port: rPort,
+                localport: rPort,
+                timeOutTime: 10000
+            })
+            localUDPServer.on('listening', function (details) {
+                log.log('DNS - IPv4 to IPv4 proxy }>=<{')
+                log.log('udp-proxy-server ready on ' + details.server.family + '  ' + details.server.address + ':' + details.server.port)
+                log.log('traffic is forwarded to ' + details.target.family + '  ' + details.target.address + ':' + details.target.port)
+                mainWindow.webContents.executeJavaScript(`player.pauseVideo();`)
+                isRunning('FiveM_GTAProcess.exe', (status) => {
+                    if (status != true) {
+                        setTimeout(function() { 
+                            isFiveMStillRunning()
+                        }, 30000)
+                        shell.openExternal("fivem://connect/localhost:"+rPort)
+                        mainWindow.webContents.executeJavaScript(`Swal.fire({
+                            title: 'Connected',
+                            html: 'You are now connected to AuroraRP!',
+                            icon: 'success'
+                        });`)
+                        mainWindow.hide()
+                        mainWindow.webContents.executeJavaScript('destroyEverything();')
+                        notifier.notify("AuroraRP Launcher is hidden at the apptray.")
+                    }
+                })
+            })
 
-    localUDPServer.on('proxyClose', function (peer) {
-        log.log('disconnecting socket from ' + peer.address);
-    });
-     
-    localUDPServer.on('proxyError', function (err) {
-        log.log('ProxyError! ' + err);
-    });
-     
-    localUDPServer.on('error', function (err) {
-        log.log('Error! ' + err);
-    });
+            localUDPServer.on('proxyClose', function (peer) {
+                log.log('disconnecting socket from ' + peer.address);
+            });
+            
+            localUDPServer.on('proxyError', function (err) {
+                log.log('ProxyError! ' + err);
+            });
+            
+            localUDPServer.on('error', function (err) {
+                log.log('Error! ' + err);
+            });
+        } else {
+            log.error("Bind port "+rPort+" couldn't open. It's using by: "+list[0].name)
+            mainWindow.webContents.executeJavaScript('reEnableEverything();')
+            mainWindow.show()
+            mainWindow.webContents.executeJavaScript(`Swal.fire({
+                title: 'Port Unusable',
+                html: 'Cannot open port ${rPort}.Its being used by ${list[0].name}',
+                icon: 'error'
+            });`)
+        }
+    })
 }
 //End Connect to AuroraRP
 
