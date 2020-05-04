@@ -344,6 +344,7 @@ function clientStartCheckingOnline() {
             resp.on('end', () => {
                 var fxVersion = JSON.parse(data).version
                 if (fxVersion.search("FXServer") == -1) {
+                    log.error("Cannot find FXServer into the json url. Trying to reconnect method.")
                     rConnected = null
                     clientConnect()
                 } else {
@@ -351,10 +352,12 @@ function clientStartCheckingOnline() {
                 }
             })
         }).on("error", (err) => {
+            log.error("Got error on getting server data. Trying to reconnect method.")
             rConnected = null
             clientConnect()
         })
-        theRest.setTimeout(2000, function( ) {
+        theRest.setTimeout(3000, function( ) {
+            log.error("Timedout. Trying to reconnect method.")
             rConnected = null
             clientConnect()
         })
