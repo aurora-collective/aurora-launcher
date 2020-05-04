@@ -21,6 +21,34 @@ body {
     -ms-overflow-style: none;
 }
 
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+input, button, textarea, :focus {
+    outline: none;
+}
+
+.enable_music {
+  color: #e7e7e7;
+  font-family: 'Raleway', sans-serif;
+  text-align: center;
+
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+
+  font-weight: 400;
+
+  margin: 20px auto;
+  animation: music 3s;
+  position: absolute;
+  bottom: 3.5vh;
+}
+
 #titlebar {
   display: block;
   position: relative;

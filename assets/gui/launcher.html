@@ -74,6 +74,7 @@
         <p class="mb-4 pb-0">Join with <span id="displayPlayers">...</span></p>
         <a href="#" class="play-btn mb-4" id="playNow"></a>
         <a href="#" class="about-btn scrollto">Automated Server Selection</a>
+        <div class="enable_music">Use the <strong>spacebar</strong> to toggle the music</div>
     </div>
 </section><!-- End Intro Section -->
 
@@ -132,6 +133,11 @@
             }
             });
         }
+        setTimeout(function() { 
+            if (!player) {
+                onYouTubeIframeAPIReady();
+            }
+         }, 5000)
 
         function destroyEverything() {
             if (player) {
@@ -224,7 +230,6 @@
             updatePlayers();
             updatePlayerListDisplay();
         });
-        
     </script>
 
 </body>

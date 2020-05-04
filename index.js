@@ -22,6 +22,7 @@ var randomString = require("randomstring")
 var tcpProxy = require("node-tcp-proxy")
 var udpProxy = require('udp-proxy')
 var ps = require('ps-node')
+var process = require('process')
 
 var rConnected = null
 var rServers = []
@@ -342,7 +343,6 @@ function clientStartCheckingOnline() {
             });
             resp.on('end', () => {
                 var fxVersion = JSON.parse(data).version
-                log.log(fxVersion.search("FXServer"))
                 if (fxVersion.search("FXServer") == -1) {
                     rConnected = null
                     clientConnect()
@@ -385,18 +385,20 @@ function isFiveMStillRunning () {
     })
 }
 
-function clientStartRProxy() {
+function clientStartRProxy(bypassDetection=false) {
     if (localTCPServer) {
+        log.log("Closed local TCP Server Proxy")
         localTCPServer.end()
         localTCPServer = null
     }
     if (localUDPServer) {
+        log.log("Closed local UDP Server Proxy")
         localUDPServer.close()
         localUDPServer = null
     }
     findProcess('port', rPort)
     .then(function(list) {
-        if (!list.length) {
+        if (!list.length || bypassDetection == true) {
             log.log("Created local proxy server for " + rConnected + ":" + rPort)
             localTCPServer = tcpProxy.createProxy(rPort, rConnected, rPort)
             localUDPServer = udpProxy.createServer({
@@ -440,21 +442,26 @@ function clientStartRProxy() {
                 log.log('Error! ' + err);
             });
         } else {
-            log.error("Bind port "+rPort+" couldn't open. It's using by: "+list[0].name)
-            mainWindow.webContents.executeJavaScript('reEnableEverything();')
-            mainWindow.show()
-            mainWindow.webContents.executeJavaScript(`Swal.fire({
-                title: 'Port Unusable',
-                html: 'Cannot open port ${rPort}.Its being used by ${list[0].name}',
-                icon: 'error'
-            });`)
+            if (process.pid == list[0].pid) {
+                log.error("TCP & UDP local proxy server did not shutdown cleanly. Retrying method")
+                clientStartRProxy(true)
+            } else {
+                log.error("Bind port "+rPort+" couldn't open. It's using by: "+list[0].name)
+                mainWindow.webContents.executeJavaScript('reEnableEverything();')
+                mainWindow.show()
+                mainWindow.webContents.executeJavaScript(`Swal.fire({
+                    title: 'Port Unusable',
+                    html: 'Cannot open port ${rPort}.Its being used by ${list[0].name}',
+                    icon: 'error'
+                });`)
+            }
         }
     })
 }
 //End Connect to AuroraRP
 
 function startBootstrapApp () {
-    log.info('Bootstraping app.')
+    log.info('Bootstraping app with process id ' + process.pid)
     if (isUserDeveloper) {
         log.info('App is running in development')
     } else {
