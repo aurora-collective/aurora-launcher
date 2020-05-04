@@ -5,7 +5,7 @@ Developer/s: Curt (curt.sg / curtcreation.net)
 All Reserve Rights Curt Creation 2020 - 2021
 */
 
-const {app, BrowserWindow, dialog, shell, clipboard} = require("electron")
+const {app, BrowserWindow, dialog, shell, clipboard, Menu, Tray} = require("electron")
 const {download} = require("electron-dl")
 const {autoUpdater} = require('electron-updater')
 const log = require('electron-log')
@@ -15,6 +15,7 @@ const exec = require('child_process').exec
 const httpRequest = require('http')
 const httpsRequest = require('https')
 const findProcess = require('find-process')
+const notifier = require('node-notifier')
 var ipc = require('electron').ipcMain
 var fs = require('fs')
 var randomString = require("randomstring")
@@ -29,6 +30,7 @@ var localTCPServer = null
 var localUDPServer = null
 var ts3Connected = false
 let mainWindow = null
+var appTray = null
 
 const gotTheLock = app.requestSingleInstanceLock()
 
@@ -305,7 +307,7 @@ function initiateConnection() {
 
 function clientConnect() {
     if (rConnected == null) {
-        find('port', rPort)
+        findProcess('port', rPort)
         .then(function(list) {
             if (!list.length) {
                 log.log("Checking available servers..")
@@ -431,6 +433,8 @@ function clientStartRProxy() {
                     html: 'You are now connected to AuroraRP!',
                     icon: 'success'
                 });`)
+                mainWindow.hide()
+                notifier.notify("AuroraRP Launcher is hidden at the apptray.")
             }
         })
     })
@@ -488,12 +492,25 @@ function startBootstrapApp () {
 
     mainWindow.loadFile('assets/gui/launcher.html', {userAgent: 'Aurora Launcher'})
 
+    appTray = new Tray(path.join(__dirname, 'build/icon.ico'))
+    appTray.setToolTip("AuroraRP")
+    const contextMenu = Menu.buildFromTemplate([
+        { label: 'AuroraRP v'+ app.getVersion() },
+        { type: 'separator' },
+        { label: 'Discord', click() { shell.openExternal('https://discord.aurorav.net/'); } },
+        { type: 'separator' },
+        { label: 'Quit AuroraRP', click() { app.quit() } },
+      ])
+    appTray.setContextMenu(contextMenu)
+
     mainWindow.webContents.once('dom-ready', () => {
-        log.info('Bootstrap window is ready.');
+        log.info('Bootstrap window is ready.')
         mainWindow.show()
         autoUpdater.checkForUpdates()
+        appTray.on('click', () => {
+            mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
+        })
     })
-
 }
 
 ipc.on('checkUpdate', function() {
