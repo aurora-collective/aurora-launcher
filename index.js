@@ -14,11 +14,13 @@ const path = require('path')
 const exec = require('child_process').exec
 const httpRequest = require('http')
 const httpsRequest = require('https')
+const findProcess = require('find-process')
 var ipc = require('electron').ipcMain
 var fs = require('fs')
 var randomString = require("randomstring")
 var tcpProxy = require("node-tcp-proxy")
 var udpProxy = require('udp-proxy')
+var ps = require('ps-node')
 
 var rConnected = null
 var rServers = []
@@ -217,8 +219,7 @@ function insatllRequirementTS3() {
 }
 ipc.on('insatllRequirementTS3', insatllRequirementTS3)
 
-function connectTS3Server() {
-    ts3Connected = true
+function connectTS3Server(arch=64) {
     mainWindow.webContents.executeJavaScript(`Swal.fire({
         title: 'TS3 Connecting',
         html: 'Connecting to you to Aurora Roleplay Team Speak Server.',
@@ -227,8 +228,36 @@ function connectTS3Server() {
             Swal.showLoading();
         }
     });`)
-    shell.openExternal("ts3server://ts.aurorav.net?port=1113&channel=Waiting Channel&password=fGaR5P8SzsbQHey2")
-    setTimeout(function() { initiateConnection() }, 3000)
+    findProcess('name', 'ts3client_win'+arch, true)
+        .then(function(list) {
+            if (list.length == 0) {
+                if (arch == 32) {
+                    shell.openExternal("ts3server://ts.aurorav.net?port=1113&channel=Waiting Channel&password=fGaR5P8SzsbQHey2")
+                    setTimeout(function() { initiateConnection() }, 3000)
+                    ts3Connected = true
+                } else {
+                    connectTS3Server(32)
+                }
+            } else {
+                ps.kill(list[0].pid, function(err){
+                    if (err) {
+                        if (!ts3Connected) {
+                            log.error("Error killing pid "+list[0].pid)
+                            mainWindow.webContents.executeJavaScript(`Swal.fire({
+                                title: 'Error',
+                                html: 'Please exit Team Speak 3.',
+                                icon: 'error'
+                            });`)
+                        }
+                    } else {
+                        shell.openExternal("ts3server://ts.aurorav.net?port=1113&channel=Waiting Channel&password=fGaR5P8SzsbQHey2")
+                        setTimeout(function() { initiateConnection() }, 3000)
+                        ts3Connected = true
+                    }
+                })
+            }
+        })
+    
 }
 ipc.on('connectTS3Server', connectTS3Server)
 //End of TS3 Installation Part Helper
@@ -276,56 +305,72 @@ function initiateConnection() {
 
 function clientConnect() {
     if (rConnected == null) {
-        log.log("Checking available servers..")
-        shuffle(rServers)
-        for(let val of rServers) {
-            if (rConnected == null) {
-                const req = httpRequest.request({
-                    hostname: val,
-                    port: rPort,
-                    path: '',
-                    method: 'GET',
-                    timeout: 1500
-                }, res => {
-                    if (res.statusCode == 200) {
-                        if (rConnected == null) {
-                            rConnected = val
-                            log.log("Found available host " + val + ":" + rPort)
-                            clientStartCheckingOnline()
-                            clientStartRProxy()
-                        }
+        find('port', rPort)
+        .then(function(list) {
+            if (!list.length) {
+                log.log("Checking available servers..")
+                shuffle(rServers)
+                for(let val of rServers) {
+                    if (rConnected == null) {
+                        httpRequest.get('http://'+val+":"+rPort, (resp) => {
+                            let data = ''
+
+                            resp.on('data', (chunk) => {
+                                data += chunk
+                            });
+                            resp.on('end', () => {
+                                var fxVersion = JSON.parse(data).version
+                                if (fxVersion.search("FXServer") != -1) {
+                                    if (rConnected == null) {
+                                        rConnected = val
+                                        log.log("Found available host " + val + ":" + rPort)
+                                        clientStartCheckingOnline()
+                                        clientStartRProxy()
+                                    }
+                                }
+                            })
+                        }).on("error", (err) => {
+                            log.log("Host failed: "+err)
+                        })
                     }
-                })
-                req.on('error', error => {
-                    log.error(error)
-                })
-                req.end()
+                }
+            } else {
+                log.error("Port " + rPort + " is using " + list[0].name)
+                mainWindow.webContents.executeJavaScript(`Swal.fire({
+                    title: 'Proxy Failed',
+                    html: 'Unable to create socket on port ${rPort}. Please close ${list[0].name}.',
+                    icon: 'error'
+                });`)
             }
-        }
+        })
     }
 }
 
 function clientStartCheckingOnline() {
     if (rConnected != null) {
-        const req = httpRequest.request({
-            hostname: rConnected,
-            port: rPort,
-            path: '',
-            method: 'GET',
-            timeout: 1500
-        }, res => {
-            if (res.statusCode != 200) {
-                rConnected = null
-                clientConnect()
-            } else {
-                setTimeout(clientStartCheckingOnline, 1500)
-            }
-        })
-        req.on('error', error => {
+        var theRest = httpRequest.get('http://'+rConnected+":"+rPort, (resp) => {
+            let data = ''
+
+            resp.on('data', (chunk) => {
+                data += chunk
+            });
+            resp.on('end', () => {
+                var fxVersion = JSON.parse(data).version
+                if (fxVersion.search("FXServer") == -1) {
+                    rConnected = null
+                    clientConnect()
+                } else {
+                    setTimeout(clientStartCheckingOnline, 1500)
+                }
+            })
+        }).on("error", (err) => {
             rConnected = null
             clientConnect()
         })
-        req.end()
+        theRest.setTimeout(2000, function( ) {
+            rConnected = null
+            clientConnect()
+        })
     }
 }
 
