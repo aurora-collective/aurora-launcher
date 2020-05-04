@@ -492,7 +492,7 @@ function startBootstrapApp () {
 
     mainWindow.loadFile('assets/gui/launcher.html', {userAgent: 'Aurora Launcher'})
 
-    appTray = new Tray(path.join(__dirname, 'build/icon.ico'))
+    appTray = new Tray('build/icon.ico')
     appTray.setToolTip("AuroraRP")
     const contextMenu = Menu.buildFromTemplate([
         { label: 'AuroraRP v'+ app.getVersion() },
