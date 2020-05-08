@@ -77,7 +77,7 @@ function shuffle(array) {
 
 function preRequirementsCheck() {
     log.info("Checking system requirements.")
-    isRunning('FiveM_GTAProcess.exe', (status) => {
+    isRunning('FiveM.exe', (status) => {
         if (status == true) {
             mainWindow.webContents.executeJavaScript(`Swal.fire({
                 title: 'Play Failed',
@@ -366,7 +366,7 @@ function clientStartCheckingOnline() {
 }
 
 function isFiveMStillRunning () {
-    isRunning('FiveM_GTAProcess.exe', (status) => {
+    isRunning('FiveM.exe', (status) => {
         if (status != true) {
             log.log("Shutting all the local proxies servers")
             mainWindow.webContents.executeJavaScript('reEnableEverything();')
@@ -416,7 +416,7 @@ function clientStartRProxy(bypassDetection=false) {
                 log.log('udp-proxy-server ready on ' + details.server.family + '  ' + details.server.address + ':' + details.server.port)
                 log.log('traffic is forwarded to ' + details.target.family + '  ' + details.target.address + ':' + details.target.port)
                 mainWindow.webContents.executeJavaScript(`player.pauseVideo();`)
-                isRunning('FiveM_GTAProcess.exe', (status) => {
+                isRunning('FiveM.exe', (status) => {
                     if (status != true) {
                         setTimeout(function() { 
                             isFiveMStillRunning()
