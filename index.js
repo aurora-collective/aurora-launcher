@@ -358,7 +358,7 @@ function clientStartCheckingOnline() {
             rConnected = null
             clientConnect()
         })
-        theRest.setTimeout(7000, function( ) {
+        theRest.setTimeout(12000, function( ) {
             log.error("Timedout. Trying to reconnect method.")
             rConnected = null
             clientConnect()
@@ -391,10 +391,12 @@ function isFiveMStillRunning () {
                 mainWindow.webContents.executeJavaScript('reEnableEverything();')
                 mainWindow.show()
                 if (localTCPServer) {
+                    log.log("Closed local TCP Server Proxy")
                     localTCPServer.end()
                     localTCPServer = null
                 }
                 if (localUDPServer) {
+                    log.log("Closed local UDP Server Proxy")
                     localUDPServer.close()
                     localUDPServer = null
                 }
