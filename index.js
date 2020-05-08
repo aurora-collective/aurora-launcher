@@ -32,6 +32,7 @@ var localUDPServer = null
 var ts3Connected = false
 let mainWindow = null
 var appTray = null
+var disableAutoDetectionFiveM = false
 
 const gotTheLock = app.requestSingleInstanceLock()
 
@@ -365,28 +366,47 @@ function clientStartCheckingOnline() {
     }
 }
 
+ipc.on('changeDetection', function() {
+    log.log("Chaning detection rule.")
+    if (disableAutoDetectionFiveM) {
+        disableAutoDetectionFiveM = false
+        mainWindow.webContents.executeJavaScript(`Swal.fire({
+            title: 'FiveM',
+            html: 'Changed fivem detecting to false.'
+        });`)
+    } else {
+        disableAutoDetectionFiveM = true
+        mainWindow.webContents.executeJavaScript(`Swal.fire({
+            title: 'FiveM',
+            html: 'Changed fivem detecting to true.'
+        });`)
+    }
+})
+
 function isFiveMStillRunning () {
-    isRunning('FiveM.exe', (status) => {
-        if (status != true) {
-            log.log("Shutting all the local proxies servers")
-            mainWindow.webContents.executeJavaScript('reEnableEverything();')
-            mainWindow.show()
-            if (localTCPServer) {
-                localTCPServer.end()
-                localTCPServer = null
-            }
-            if (localUDPServer) {
-                localUDPServer.close()
-                localUDPServer = null
-            }
-            rConnected = null
-            mainWindow.webContents.executeJavaScript(`player.playVideo();`)
-        } else {
-            setTimeout(function() { 
-                isFiveMStillRunning()
+    if (disableAutoDetectionFiveM == false) {
+        isRunning('FiveM.exe', (status) => {
+            if (status != true) {
+                log.log("Shutting all the local proxies servers")
+                mainWindow.webContents.executeJavaScript('reEnableEverything();')
+                mainWindow.show()
+                if (localTCPServer) {
+                    localTCPServer.end()
+                    localTCPServer = null
+                }
+                if (localUDPServer) {
+                    localUDPServer.close()
+                    localUDPServer = null
+                }
+                rConnected = null
+                mainWindow.webContents.executeJavaScript(`player.playVideo();`)
+            } else {
+                setTimeout(function() { 
+                    isFiveMStillRunning()
                 }, 5000)
-        }
-    })
+            }
+        })
+    }
 }
 
 function clientStartRProxy(bypassDetection=false) {

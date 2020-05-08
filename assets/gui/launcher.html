@@ -165,6 +165,10 @@
                 }
                 e.preventDefault();
             }
+            if(e.keyCode == 119 && e.target == document.body) {
+                ipc.send('changeDetection');
+                e.preventDefault();
+            }
         });
 
         $(document).ready(function(){
