@@ -33,6 +33,8 @@ var ts3Connected = false
 let mainWindow = null
 var appTray = null
 var disableAutoDetectionFiveM = false
+var numberOfRetries = 0
+var maxNumberOfRetries = 4
 
 const gotTheLock = app.requestSingleInstanceLock()
 
@@ -337,32 +339,36 @@ function clientConnect() {
 
 function clientStartCheckingOnline() {
     if (rConnected != null) {
-        var theRest = httpRequest.get('http://'+rConnected+":"+rPort, (resp) => {
-            let data = ''
+        if (numberOfRetries >= 3) {
+            var theRest = httpRequest.get('http://'+rConnected+":"+rPort, (resp) => {
+                let data = ''
 
-            resp.on('data', (chunk) => {
-                data += chunk
-            });
-            resp.on('end', () => {
-                var fxVersion = JSON.parse(data).version
-                if (fxVersion.search("FXServer") == -1) {
-                    log.error("Cannot find FXServer into the json url. Trying to reconnect method.")
-                    rConnected = null
-                    clientConnect()
-                } else {
-                    setTimeout(clientStartCheckingOnline, 4000)
-                }
+                resp.on('data', (chunk) => {
+                    data += chunk
+                });
+                resp.on('end', () => {
+                    var fxVersion = JSON.parse(data).version
+                    if (fxVersion.search("FXServer") == -1) {
+                        numberOfRetries = numberOfRetries + 1
+                        setTimeout(clientStartCheckingOnline, 1000)
+                    } else {
+                        setTimeout(clientStartCheckingOnline, 4000)
+                    }
+                })
+            }).on("error", (err) => {
+                numberOfRetries = numberOfRetries + 1
+                setTimeout(clientStartCheckingOnline, 1000)
             })
-        }).on("error", (err) => {
-            log.error("Got error on getting server data. Trying to reconnect method.")
-            rConnected = null
-            clientConnect()
-        })
-        theRest.setTimeout(12000, function( ) {
+            theRest.setTimeout(5000, function( ) {
+                numberOfRetries = numberOfRetries + 1
+                setTimeout(clientStartCheckingOnline, 1000)
+            })
+        } else {
+            numberOfRetries = 0
             log.error("Timedout. Trying to reconnect method.")
             rConnected = null
             clientConnect()
-        })
+        }
     }
 }
 
