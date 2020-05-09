@@ -339,7 +339,7 @@ function clientConnect() {
 
 function clientStartCheckingOnline() {
     if (rConnected != null) {
-        if (numberOfRetries >= 3) {
+        if (numberOfRetries <= 3) {
             var theRest = httpRequest.get('http://'+rConnected+":"+rPort, (resp) => {
                 let data = ''
 
