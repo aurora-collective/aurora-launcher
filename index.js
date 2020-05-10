@@ -309,6 +309,7 @@ function initiateConnection() {
 function clientConnect() {
     if (rConnected == null) {
         numberOfRetries = 0
+        log.log(`Reseting num of retries to ${numberOfRetries}`)
         log.log("Checking available servers..")
         shuffle(rServers)
         for(let val of rServers) {
@@ -350,6 +351,7 @@ function clientStartCheckingOnline() {
                     var fxVersion = JSON.parse(data).version
                     if (fxVersion.search("FXServer") == -1) {
                         numberOfRetries = numberOfRetries + 1
+                        log.log(`Increasing num of retries to ${numberOfRetries}/${maxNumberOfRetries}`)
                         setTimeout(clientStartCheckingOnline, 2000)
                     } else {
                         setTimeout(clientStartCheckingOnline, 5000)
@@ -358,14 +360,17 @@ function clientStartCheckingOnline() {
                 })
             }).on("error", (err) => {
                 numberOfRetries = numberOfRetries + 1
+                log.log(`Increasing num of retries to ${numberOfRetries}/${maxNumberOfRetries}`)
                 setTimeout(clientStartCheckingOnline, 2000)
             })
             theRest.setTimeout(5000, function( ) {
                 numberOfRetries = numberOfRetries + 1
+                log.log(`Increasing num of retries to ${numberOfRetries}/${maxNumberOfRetries}`)
                 setTimeout(clientStartCheckingOnline, 2000)
             })
         } else {
             numberOfRetries = 0
+            log.log(`Reseting num of retries to ${numberOfRetries}`)
             log.error("Timedout. Trying to reconnect method.")
             rConnected = null
             clientConnect()
