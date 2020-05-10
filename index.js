@@ -34,7 +34,7 @@ let mainWindow = null
 var appTray = null
 var disableAutoDetectionFiveM = false
 var numberOfRetries = 0
-var maxNumberOfRetries = 4
+var maxNumberOfRetries = 8
 
 const gotTheLock = app.requestSingleInstanceLock()
 
@@ -308,6 +308,7 @@ function initiateConnection() {
 
 function clientConnect() {
     if (rConnected == null) {
+        numberOfRetries = 0
         log.log("Checking available servers..")
         shuffle(rServers)
         for(let val of rServers) {
@@ -339,29 +340,29 @@ function clientConnect() {
 
 function clientStartCheckingOnline() {
     if (rConnected != null) {
-        if (numberOfRetries <= 3) {
+        if (numberOfRetries <= maxNumberOfRetries) {
             var theRest = httpRequest.get('http://'+rConnected+":"+rPort, (resp) => {
                 let data = ''
-
                 resp.on('data', (chunk) => {
                     data += chunk
-                });
+                })
                 resp.on('end', () => {
                     var fxVersion = JSON.parse(data).version
                     if (fxVersion.search("FXServer") == -1) {
                         numberOfRetries = numberOfRetries + 1
-                        setTimeout(clientStartCheckingOnline, 1000)
+                        setTimeout(clientStartCheckingOnline, 2000)
                     } else {
-                        setTimeout(clientStartCheckingOnline, 4000)
+                        setTimeout(clientStartCheckingOnline, 5000)
+                        numberOfRetries = 0
                     }
                 })
             }).on("error", (err) => {
                 numberOfRetries = numberOfRetries + 1
-                setTimeout(clientStartCheckingOnline, 1000)
+                setTimeout(clientStartCheckingOnline, 2000)
             })
             theRest.setTimeout(5000, function( ) {
                 numberOfRetries = numberOfRetries + 1
-                setTimeout(clientStartCheckingOnline, 1000)
+                setTimeout(clientStartCheckingOnline, 2000)
             })
         } else {
             numberOfRetries = 0
