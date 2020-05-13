@@ -185,7 +185,7 @@
 
             function updatePlayers() {
                 if (funcsAll == true) {
-                    $.post("https://play.aurorav.net/api/online.php", function(data) {
+                    $.post("https://aurorav.net/ytmp3/online.php", function(data) {
                         data = JSON.parse(data);
                         thePlayerOnline = data.online;
                         thePlayersInGame = data.players;
